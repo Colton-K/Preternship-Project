@@ -92,10 +92,11 @@ def adjustMarkdown(filename):
     elif i + 2 < len(workingLines):
       # get name at beginning
       if "**" in workingLines[i]:
+        line += "`"
         for letter in workingLines[i]:
           if letter != "*":
             line += letter
-
+        line += "`"
 
       # handle ':' sections
       elif workingLines[i+2][0] == ':':
