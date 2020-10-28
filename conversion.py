@@ -189,7 +189,7 @@ def adjustMarkdown(filename):
         # filter headers and blank lines
         if addText and not allUpper(workingLines[i]):
           # create see also links
-          if workingLines[i][len(workingLines[i]) - 2] == '\\':
+          if workingLines[i][len(workingLines[i]) - 2] == '\\': 
             # Format: [`MPI_Bcast`(3)](MPI_Bcast.html)
             line = "[`{}`(3)]({}.html)\n".format(workingLines[i][:-2],workingLines[i][:-2])
           # normal text
@@ -216,12 +216,13 @@ def adjustMarkdown(filename):
 
 
     # make things in fixedWidthWords fixed-width font if needed
-    if not inCodeBlock:
+    if not inCodeBlock and not parameterLine:
       # check if any of the words are in the line
       for word in fixedWidthWords:
         # go through the line
           if word in line:
             line = line.replace(word, '`' + word + '`')
+
 
     # finally, add line
     if(line):
@@ -229,6 +230,14 @@ def adjustMarkdown(filename):
     
     # at the end of the line, reset the line tag for the next iteration
     parameterLine = False
+
+  # add the links in the see also
+  maxNumLinks = 10 # how far down the lines do you wanna check?
+  for i in range(len(newLines), len(newLines)-maxNumLinks, -1):
+    if " " not in newLines[i-1]:
+      # newLines[i-1] = "[`{}`(3)]({}.html)\n".format(newLines[i-1][:-2].rstrip(),newLines[i-1][:-2].rstrip()) # how it should be
+      newLines[i-1] = "[`{}`(3)]({}.html)\n".format(newLines[i-1][1:-1],newLines[i-1][1:-1]) # how it is because there is a newline added somewhere...
+
 
   return newLines
 
