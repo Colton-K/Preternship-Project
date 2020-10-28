@@ -64,10 +64,36 @@ def adjustWords(words):
         words[index]+=last_mark
     line = (' ').join(words)
     return line
+
+# adds newline inside the code block if necessary
+def checkBreak(line):
+  editedLine = ""
+  # check beginning of c
+  if "#include" in line:
+    editedLine += "\n"
+  # check beginning of fortran
+  elif "USE MPI" in line:
+    editedLine += "\n"
+  # check beginning of fortran2008 
+  elif "USE mpi_f08" in line:
+    editedLine += "\n"
+  # check beginning of function in c
+  elif " MPI_" in line:
+    editedLine += "\n"
+  # check beginning of function in both fortrans
+  elif "MPI_" in line and not ':' in line:
+    editedLine += "\n"
+
+
+  # add line and return
+  editedLine += line
+  return editedLine
+
 # reads a markdown file and calls helper function processLine to process the markdown file further
 def adjustMarkdown(filename):
   workingLines = []
   newLines = []
+  fixedWidthWords = []
 
   with open(filename, "r") as fh:
     for line in fh.readlines():
@@ -75,6 +101,7 @@ def adjustMarkdown(filename):
 
   inCodeBlock = False
   addText = False
+  parameterLine = False
   #check whether it is in the name section
   name = False
   for i in range(1, len(workingLines)):
@@ -115,10 +142,11 @@ def adjustMarkdown(filename):
           line = workingLines[i][4:]
 
         else:
-          line = workingLines[i][4:]
+          # line = workingLines[i][4:]
+          line = checkBreak(workingLines[i][4:])
           #When changing a new line in a code block, use six spaces instead of a tab
           if(line[0]=='\t'):
-              line = '      '+line[1:]
+              line = '    '+line[1:]
       else:
         print("HERE")
         line = "-----------HERE----------------"
@@ -128,19 +156,23 @@ def adjustMarkdown(filename):
     elif i + 2 < len(workingLines):
       # get name at beginning
       if "**" in workingLines[i]:
-        line += "`"
+        # line += "`"
         for letter in workingLines[i]:
           if letter != "*":
             line += letter
-        line += "`"
+        # line += "`"
 
       # handle ':' sections
       elif workingLines[i+2][0] == ':':
-        line += '`'
+        parameterLine = True
+        # line += '* `' # ticks will be added later
+        line += '* '
         line += workingLines[i].rstrip()
-        line += '`'
+        # line += '`'
         line += ' : '
         line += workingLines[i+2][4:]
+        # add word to go through other lines and syntax highlight later
+        fixedWidthWords.append(workingLines[i].rstrip())
 
       # text blocks below description and errors
       elif len(newLines)>2:
@@ -172,14 +204,32 @@ def adjustMarkdown(filename):
 
     else:
         line =  workingLines[i]
-    #adjust words for each line
+
+    # #adjust words for each line
     try:
+      # make sure not in a code block
+      if not inCodeBlock and not parameterLine:
         line = adjustWords(line.split(' '))
     except:
         #if the line only has one word, skip this line
         pass
+
+
+    # make things in fixedWidthWords fixed-width font if needed
+    if not inCodeBlock:
+      # check if any of the words are in the line
+      for word in fixedWidthWords:
+        # go through the line
+          if word in line:
+            line = line.replace(word, '`' + word + '`')
+
+    # finally, add line
     if(line):
       newLines.append(line)
+    
+    # at the end of the line, reset the line tag for the next iteration
+    parameterLine = False
+
   return newLines
 
 def runPandoc(file):
