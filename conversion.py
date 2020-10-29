@@ -165,10 +165,10 @@ def adjustMarkdown(filename):
       # handle ':' sections
       elif workingLines[i+2][0] == ':':
         parameterLine = True
-        # line += '* `' # ticks will be added later
-        line += '* '
+        line += '* `' # ticks will not be added later
+        # line += '* '
         line += workingLines[i].rstrip()
-        # line += '`'
+        line += '`'
         line += ' : '
         line += workingLines[i+2][4:]
         # add word to go through other lines and syntax highlight later
