@@ -110,6 +110,7 @@ def adjustMarkdown(filename):
   name = False
   #Normal text section includes all sections except for parameterLine and Syntax
   normalText = False
+  seeAlso = False
   for i in range(1, len(workingLines)):
     line = ""
 
@@ -127,11 +128,10 @@ def adjustMarkdown(filename):
 
       # if all caps, then heading 1
       if allUpper(workingLines[i-1]):
-        if workingLines[i-1] != "NAME\n":
+        if "SEE ALSO" in workingLines[i-1]:
+            seeAlso = True
         #add a new line after each title
-          line = '\n# ' + workingLines[i-1].title()+'\n'
-        else:
-          line = '# ' + workingLines[i-1].title()+'\n'
+        line = '\n# ' + workingLines[i-1].title()+'\n'
 
       #Mark that this is a normal section
         if 'Syntax' not in line and 'Parameter' not in line:
@@ -195,7 +195,16 @@ def adjustMarkdown(filename):
           # create see also links
           if workingLines[i][len(workingLines[i]) - 2] == '\\':
             # Format: [`MPI_Bcast`(3)](MPI_Bcast.html)
-            line = "[`{}`(3)]({}.html)\n".format(workingLines[i][:-2],workingLines[i][:-2])
+            #I'm not sure whether the link to the index.php is ..
+            #Please correct this line if this doesn't send the file name to index.php
+            line = '<a href=\'../?file='
+            line+=workingLines[i][:-2]
+            line+='.md\'>`'
+            line+=workingLines[i][:-2]
+            line+='`</a>'
+            line+="\n"
+            #line = '<a href=\'./{}.3.php\'>`{}`</a>\n'.format(workingLines[i][:-2],workingLines[i][:-2])
+            seeAlso = True
           # normal text
           else:
             line =  workingLines[i]
@@ -211,7 +220,7 @@ def adjustMarkdown(filename):
     # #adjust words for each line
     try:
       # make sure not in a code block
-      if not inCodeBlock and not parameterLine:
+      if not inCodeBlock and not parameterLine and not seeAlso:
         line = adjustWords(line.split(' '))
     except:
         #if the line only has one word, skip this line
@@ -219,7 +228,7 @@ def adjustMarkdown(filename):
 
 
     # make things in fixedWidthWords fixed-width font if needed
-    if not inCodeBlock and not parameterLine:
+    if not inCodeBlock and not parameterLine and not seeAlso:
       # check if any of the words are in the line
       for word in fixedWidthWords:
         wordAndBuffer = ' ' + word + ' ' # adds spaces around to prevent things like `comm`unicator
@@ -231,22 +240,27 @@ def adjustMarkdown(filename):
     if "\t" in line:
       # print("replacing tab")
       line = line.replace("\t", "    ")
-
+    if seeAlso and "MPI_" in workingLines[i]:
+      #line = '<a href=\'./{}.3.php\'>`{}`</a>\n'.format(workingLines[i].strip(),workingLines[i].strip()) # how it is because there is a newline added somewhere...
+      line = '<a href=\'../?file='
+      line+=workingLines[i][:-2]
+      #
+      line+='.md\'>`'
+      line+=workingLines[i][:-2]
+      line+='`</a>'
+      line+="\n"
     # finally, add line
     if(line):
       newLines.append(line)
 
     # at the end of the line, reset the line tag for the next iteration
     parameterLine = False
-
   # add the links in the see also
-  maxNumLinks = 10 # how far down the lines do you wanna check?
-  for i in range(len(newLines), len(newLines)-maxNumLinks, -1):
-    if " " not in newLines[i-1]:
+  #maxNumLinks = 10 # how far down the lines do you wanna check?
+  #for i in range(len(newLines), len(newLines)-maxNumLinks, -1):
+    #if seeAlso:
       # newLines[i-1] = "[`{}`(3)]({}.html)\n".format(newLines[i-1][:-2].rstrip(),newLines[i-1][:-2].rstrip()) # how it should be
-      newLines[i-1] = "[`{}`(3)]({}.html)\n".format(newLines[i-1][1:-1],newLines[i-1][1:-1]) # how it is because there is a newline added somewhere...
-
-
+      #newLines[i-1] = "<a href=\"./{}.3.php\">`{}`</a>\n".format(newLines[i-1][:-1],newLines[i-1][:-1]) # how it is because there is a newline added somewhere...
   return newLines
 
 def runPandoc(file):
@@ -274,4 +288,3 @@ def convertAll():
             print("Couldn't convert", filename)
 # convert(args.file)
 convertAll()
-
