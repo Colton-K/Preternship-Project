@@ -1,5 +1,6 @@
 <?php
-$topdir = "../..";
+//$topdir = "../..";
+$topdir = "../ompi-www";
 include_once("$topdir/doc/nav.inc");
 include_once("$topdir/includes/header.inc");
 
@@ -13,7 +14,7 @@ include_once("Parsedown.php");
 $Parsedown = new Parsedown();
 
 // get the filename from the get request
-$markdown_filename = $_GET["file"];
+$markdown_filename = $_GET["file"] or die("Insert some base index stuff here");
 // printf("Loading file: $markdown_filename"); // debug
 
 // check that the filename is valid - TODO: make more robust
@@ -34,7 +35,7 @@ if (filesize($markdown_filename) > 1) {
         fclose($fp);
 }
 else {
-        echo "$markdown_filename was found but does not have any contents";
+        echo "$markdown_filename is an invalid request...";
 }
 
 include_once("$topdir/includes/footer.inc");
