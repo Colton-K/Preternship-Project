@@ -148,7 +148,9 @@ def adjustMarkdown(filename):
         if "SEE ALSO" in workingLines[i-1]:
             seeAlso = True
         #add a new line after each title
-        line = '\n# ' + workingLines[i-1].title()+'\n'
+        if workingLines[i-1] != "NAME\n":
+            line+='\n'
+        line+= '# ' + workingLines[i-1].title()+'\n'
 
       #Mark that this is a normal section
         if 'Syntax' not in line and 'Parameter' not in line:
