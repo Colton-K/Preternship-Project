@@ -26,10 +26,14 @@ def allUpper(line):
   # check if line is empty, if so, return false
   if len(line) == 0:
     return False
-
-  # nromal operation
+#Some titles have punctuations like '-' in them
+  noPuncLine = ''
   for letter in line:
-    if not letter.isupper() and letter != " ":
+      if letter.isalpha():
+          noPuncLine+=letter
+  # nromal operation
+  for letter in noPuncLine:
+    if not letter.isupper():
       return False
 
   return True
@@ -74,7 +78,7 @@ def checkBreak(line):
   # check beginning of fortran
   elif "USE MPI" in line:
     editedLine += "\n"
-  # check beginning of fortran2008 
+  # check beginning of fortran2008
   elif "USE mpi_f08" in line:
     editedLine += "\n"
   # check beginning of function in c
@@ -104,6 +108,8 @@ def adjustMarkdown(filename):
   parameterLine = False
   #check whether it is in the name section
   name = False
+  #Normal text section includes all sections except for parameterLine and Syntax
+  normalText = False
   for i in range(1, len(workingLines)):
     line = ""
 
@@ -124,16 +130,20 @@ def adjustMarkdown(filename):
         if workingLines[i-1] != "NAME\n":
         #add a new line after each title
           line = '\n# ' + workingLines[i-1].title()+'\n'
-          name = False
         else:
           line = '# ' + workingLines[i-1].title()+'\n'
-          name = True
-      # else, heading 2
+
+      #Mark that this is a normal section
+        if 'Syntax' not in line and 'Parameter' not in line:
+            normalText = True
+        else:
+            normalText = False
+    # else, heading 2
       else:
         line = '## ' + workingLines[i-1].title()+'\n'
 
     # indented blocks
-    elif "    " in workingLines[i]:
+    elif "    " in workingLines[i] and not normalText:
       # start code block
       inCodeBlock = True
       if len(newLines) > 1:
@@ -176,28 +186,21 @@ def adjustMarkdown(filename):
 
       # text blocks below description and errors
       elif len(newLines)>2:
-        if 'Errors' in newLines[len(newLines)-1]:
-          addText = True
-        elif 'Description' in newLines[len(newLines)-1]:
-          addText = True
-        elif 'See Also' in newLines[len(newLines)-1]:
-          addText = True
-          #add notes section
-        elif 'Notes' in newLines[len(newLines)-1]:
-          addText = True
+          #If the text is not in a paramter or syntax section, add text
+        if normalText:
+            addText=True
 
         # filter headers and blank lines
         if addText and not allUpper(workingLines[i]):
           # create see also links
-          if workingLines[i][len(workingLines[i]) - 2] == '\\': 
+          if workingLines[i][len(workingLines[i]) - 2] == '\\':
             # Format: [`MPI_Bcast`(3)](MPI_Bcast.html)
             line = "[`{}`(3)]({}.html)\n".format(workingLines[i][:-2],workingLines[i][:-2])
           # normal text
           else:
-            #Filter function name and parameters in it
             line =  workingLines[i]
             #if a normal text is under name section, also add it to newLines
-      elif(name==True and workingLines[i].isupper()==False and workingLines[i]!='\n'):
+      elif(normalText and workingLines[i].isupper()==False):
 
           line = workingLines[i]
 
@@ -219,15 +222,20 @@ def adjustMarkdown(filename):
     if not inCodeBlock and not parameterLine:
       # check if any of the words are in the line
       for word in fixedWidthWords:
+        wordAndBuffer = ' ' + word + ' ' # adds spaces around to prevent things like `comm`unicator
         # go through the line
-          if word in line:
-            line = line.replace(word, '`' + word + '`')
+        if wordAndBuffer in line:
+          line = line.replace(word, '`' + word + '`')
 
+    # replace any remaining tabs with spaces
+    if "\t" in line:
+      # print("replacing tab")
+      line = line.replace("\t", "    ")
 
     # finally, add line
     if(line):
       newLines.append(line)
-    
+
     # at the end of the line, reset the line tag for the next iteration
     parameterLine = False
 
@@ -257,5 +265,13 @@ def convert(nroffFilename):
   lines = adjustMarkdown(mdFilename)
   writeLines(lines, mdFilename)
 
+def convertAll():
+  for filename in os.listdir():
+    if ".3in" in filename:
+        try:
+            convert(filename)
+        except:
+            print("Couldn't convert", filename)
+# convert(args.file)
+convertAll()
 
-convert(args.file)
