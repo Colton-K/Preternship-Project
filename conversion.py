@@ -1,6 +1,9 @@
 import os # os.system(command)
 import argparse
 
+# determine what format of the seealso is outputted
+newLinks = True
+
 parser = argparse.ArgumentParser()
 parser.add_argument('-f', dest='file', type=str, help='.3in file to convert to markdown')
 args = parser.parse_args()
@@ -37,6 +40,20 @@ def allUpper(line):
       return False
 
   return True
+
+# figure out what text to add to links in the see also section
+def addLink(mpiFile):
+    line = ""
+
+    if newLinks:
+        # Format: [`MPI_Bcast`(3)](./?file=MPI_Bcast.md)
+        line = "[`{}(3)`](./?file={}.md)".format(mpiFile, mpiFile)
+
+    else:
+        # Format: [`MPI_Bcast`(3)](MPI_Bcast.html)
+        line = "[`{}(3)`]({}.html)".format(mpiFile, mpiFile)
+
+    return line
 
 # helper for adjustMarkdown
 def startOfCodeBlock(line):
@@ -195,16 +212,10 @@ def adjustMarkdown(filename):
           # create see also links
           if workingLines[i][len(workingLines[i]) - 2] == '\\':
             # Format: [`MPI_Bcast`(3)](MPI_Bcast.html)
-            #I'm not sure whether the link to the index.php is ..
-            #Please correct this line if this doesn't send the file name to index.php
-            line = '<a href=\'../?file='
-            line+=workingLines[i][:-2]
-            line+='.md\'>`'
-            line+=workingLines[i][:-2]
-            line+='`</a>'
-            line+="\n"
-            #line = '<a href=\'./{}.3.php\'>`{}`</a>\n'.format(workingLines[i][:-2],workingLines[i][:-2])
+            line = addLink(workingLines[i][:-2])
+
             seeAlso = True
+
           # normal text
           else:
             line =  workingLines[i]
@@ -240,27 +251,21 @@ def adjustMarkdown(filename):
     if "\t" in line:
       # print("replacing tab")
       line = line.replace("\t", "    ")
+
+    if "\\" in line:
+      line = line.replace("\\", "")
+
     if seeAlso and "MPI_" in workingLines[i]:
+      line = addLink(workingLines[i][:-2])
       #line = '<a href=\'./{}.3.php\'>`{}`</a>\n'.format(workingLines[i].strip(),workingLines[i].strip()) # how it is because there is a newline added somewhere...
-      line = '<a href=\'../?file='
-      line+=workingLines[i][:-2]
-      #
-      line+='.md\'>`'
-      line+=workingLines[i][:-2]
-      line+='`</a>'
-      line+="\n"
+
     # finally, add line
     if(line):
       newLines.append(line)
 
     # at the end of the line, reset the line tag for the next iteration
     parameterLine = False
-  # add the links in the see also
-  #maxNumLinks = 10 # how far down the lines do you wanna check?
-  #for i in range(len(newLines), len(newLines)-maxNumLinks, -1):
-    #if seeAlso:
-      # newLines[i-1] = "[`{}`(3)]({}.html)\n".format(newLines[i-1][:-2].rstrip(),newLines[i-1][:-2].rstrip()) # how it should be
-      #newLines[i-1] = "<a href=\"./{}.3.php\">`{}`</a>\n".format(newLines[i-1][:-1],newLines[i-1][:-1]) # how it is because there is a newline added somewhere...
+
   return newLines
 
 def runPandoc(file):
