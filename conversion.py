@@ -1,6 +1,8 @@
 import os # os.system(command)
 import argparse
 
+os.chdir("man3")
+
 # determine what format of the seealso is outputted
 newLinks = True
 
@@ -45,13 +47,18 @@ def allUpper(line):
 def addLink(mpiFile):
     line = ""
 
+    mpiFile = mpiFile.rstrip()
+
+    if " " in mpiFile:
+      mpiFile = mpiFile.replace(" ", "")
+
     if newLinks:
         # Format: [`MPI_Bcast`(3)](./?file=MPI_Bcast.md)
-        line = "[`{}(3)`](./?file={}.md)".format(mpiFile, mpiFile)
+        line = "[`{}(3)`](./?file={}.md)\n".format(mpiFile, mpiFile)
 
     else:
         # Format: [`MPI_Bcast`(3)](MPI_Bcast.html)
-        line = "[`{}(3)`]({}.html)".format(mpiFile, mpiFile)
+        line = "[`{}(3)`]({}.html)\n".format(mpiFile, mpiFile)
 
     return line
 
@@ -143,7 +150,7 @@ def adjustMarkdown(filename):
 
       addText = False
 
-      # if all caps, then heading 1
+      # if all caps, then heading 2
       if allUpper(workingLines[i-1]):
         if "SEE ALSO" in workingLines[i-1]:
             seeAlso = True
@@ -214,7 +221,8 @@ def adjustMarkdown(filename):
           # create see also links
           if workingLines[i][len(workingLines[i]) - 2] == '\\':
             # Format: [`MPI_Bcast`(3)](MPI_Bcast.html)
-            line = addLink(workingLines[i][:-2])
+            # line = addLink(workingLines[i][:-2])
+            line = addLink(workingLines[i])
 
             seeAlso = True
 
@@ -258,8 +266,8 @@ def adjustMarkdown(filename):
       line = line.replace("\\", "")
 
     if seeAlso and "MPI_" in workingLines[i]:
-      line = addLink(workingLines[i][:-2])
-      #line = '<a href=\'./{}.3.php\'>`{}`</a>\n'.format(workingLines[i].strip(),workingLines[i].strip()) # how it is because there is a newline added somewhere...
+      # line = addLink(workingLines[i][:-2])
+      line = addLink(workingLines[i])
 
     # finally, add line
     if(line):
