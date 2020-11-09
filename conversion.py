@@ -1,5 +1,6 @@
 import os # os.system(command)
 import argparse
+import re
 
 os.chdir("man3")
 
@@ -22,7 +23,7 @@ def writeLines(lines, filename):
     for line in lines:
       fh.write(line)
 
-  print("Wrote file:",filename)
+  # print("Wrote file:",filename)
 
 # helper for adjustMarkdown
 def allUpper(line):
@@ -47,10 +48,15 @@ def allUpper(line):
 def addLink(mpiFile):
     line = ""
 
+    # print(mpiFile)
+
     mpiFile = mpiFile.rstrip()
 
     if " " in mpiFile:
       mpiFile = mpiFile.replace(" ", "")
+
+    if "\\" in mpiFile:
+      mpiFile = mpiFile.replace("\\", "")
 
     if newLinks:
         # Format: [`MPI_Bcast`(3)](./?file=MPI_Bcast.md)
@@ -221,8 +227,12 @@ def adjustMarkdown(filename):
           # create see also links
           if workingLines[i][len(workingLines[i]) - 2] == '\\':
             # Format: [`MPI_Bcast`(3)](MPI_Bcast.html)
-            # line = addLink(workingLines[i][:-2])
-            line = addLink(workingLines[i])
+            # TODO: Make a regex find for 2 'MPI_' in the same line - if so, add 2 different lines
+            print('HERE: ',re.findall('MPI_'),line)
+            if len(re.findall('MPI_')) > 1:
+              print("split lines")
+            else:
+              line = addLink(workingLines[i])
 
             seeAlso = True
 
@@ -262,12 +272,29 @@ def adjustMarkdown(filename):
       # print("replacing tab")
       line = line.replace("\t", "    ")
 
+    # remove any unwanted backslashes
     if "\\" in line:
       line = line.replace("\\", "")
 
+    # get rid of all * characters that aren't required <- doesn't work if there are code blocks in the description
+    if not inCodeBlock and not parameterLine and "*" in line:
+      line = line.replace("*", "")
+
     if seeAlso and "MPI_" in workingLines[i]:
       # line = addLink(workingLines[i][:-2])
-      line = addLink(workingLines[i])
+      if len(re.findall('MPI_', line)) > 1:
+        # print('HERE: ',re.findall('(MPI_[a-zA-Z_]+)', line),line)
+        toAdd = re.findall('(MPI_[a-zA-Z_]+)', line)
+
+        for i in range(1, len(toAdd)):
+          newLines.append(addLink(toAdd[i]))
+        # print("split lines")
+
+        line = addLink(toAdd[0])
+
+      else:
+        line = addLink(workingLines[i])
+
 
     # finally, add line
     if(line):
@@ -280,7 +307,7 @@ def adjustMarkdown(filename):
 
 def runPandoc(file):
   execLine = "pandoc {} -f man -t markdown -s -o {}".format(file, file[:-3]+"md")
-  print("Running:", execLine)
+  # print("Running:", execLine)
   os.system(execLine)
 
 
@@ -301,5 +328,6 @@ def convertAll():
             convert(filename)
         except:
             print("Couldn't convert", filename)
+
 # convert(args.file)
 convertAll()
