@@ -1,6 +1,6 @@
 <?php
-//$topdir = "../..";
-$topdir = "../ompi-www";
+$topdir = "../..";
+//$topdir = "../ompi-www";
 include_once("$topdir/doc/nav.inc");
 include_once("$topdir/includes/header.inc");
 
@@ -18,21 +18,27 @@ $markdown_filename = $_GET["file"] or die("Insert some base index stuff here");
 // printf("Loading file: $markdown_filename"); // debug
 
 // check that the filename is valid - TODO: make more robust
-if (filesize($markdown_filename) > 1) {
-        // open and read the file
-        $fp = fopen($markdown_filename, "r") or die("Unable to open this markdown file");
+if ($markdown_filename != "") {
+	// TODO: maybe change to be a subroutine
+	if (file_exists($markdown_filename)) { // TODO: validate markdown_filename
+        	// open and read the file
+        	$fp = fopen($markdown_filename, "r") or die("Unable to open this markdown file");
 
-        // read file into variable
-        $markdown_file = fread($fp, filesize($markdown_filename));
+        	// read file into variable
+        	$markdown_file = fread($fp, filesize($markdown_filename)); 
+        	// TODO: add regex make sure there are no tabs 
 
-        // check length of md file to make sure it is substantial
-        if (strlen($markdown_file) > 2) {
-                // put file into parsedown and print it to the webpage
-                echo $Parsedown->text($markdown_file);
-        }
+        	echo $Parsedown->text($markdown_file);
+        
+        	// close the file
+        	fclose($fp);
+	}
+	else {
+		echo "File not found";
+	}
+}
+else if ($markdown_filename == "") { // want to output index
 
-        // close the file
-        fclose($fp);
 }
 else {
         echo "$markdown_filename is an invalid request...";
@@ -40,6 +46,3 @@ else {
 
 include_once("$topdir/includes/footer.inc");
 
-// old code
-        // read directly into parsedown
-        // echo $Parsedown->text(fread($fp, filesize($markdown_filename)));
