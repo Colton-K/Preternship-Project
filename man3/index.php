@@ -45,14 +45,40 @@ function emit_single_man_page($filename)
     print("I'm going to show you $filename");
 
     # 1. Validate the filename: Make sure it's just numbers, letters, characters.
+    if (preg_match("^[ 0-9a-zA-Z_.]*$", $filename) { # might not filter whole line, but instead look for specific substrings  
+        # 2. Validate that the file exists
+        if (file_exists($filename) {
+            # 3. Open and read the file and close the file
+            if ($fp = fopen($filename, "r")) {
+                $markdown_file = fread($fp, filesize($filename));
+                fclose($fp);
+                                  
+                # 4. Make a Parsedown object and render the markdown
+                include_once("Parsedown.php");
+                $Parsedown = new Parsedown();
+                if ($test = $Parsedown->text($markdown_file)) {                 
+                    # 5. Print the rendered HTML
+                    printf("$test");
+                }
+                else {
+                    # 4a. If bad, error_out(...)
+                    printf("Parsedown failed to run");                                   
+                }
+            }
+            else {
+                # 3a. If bad, error_out(...)
+                printf("Unable to open file $filename");
+            }
+        }
+        # 2a. If file does not exist, error_out(...)
+        else {
+            printf("file does not exist");
+        }
+    }
     # 1a. If bad, error_out(...)
-    # 2. Validate that the file exists
-    # 2a. If file does not exist, error_out(...)
-    # 3. Open and read the file and close the file
-    # 3a. If bad, error_out(...)
-    # 4. Make a Parsedown object and render the markdown
-    # 4a. If bad, error_out(...)
-    # 5. Print the rendered HTML
+    else {
+        printf("Bad request... Pls don't hack me");
+    }
 }
 
 // get the filename from the get request
@@ -66,7 +92,7 @@ if (array_key_exists("file", $_GET)) {
 include("$topdir/includes/footer.inc");
 exit(0);
 
-
+/*
 // include Parsedown.php and init Parsedown object
 
 #include_once("Parsedown.php");
@@ -100,3 +126,4 @@ else if ($markdown_filename == "") { // want to output index
 else {
         echo "$markdown_filename is an invalid request...";
 }
+*/
