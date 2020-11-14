@@ -1,13 +1,14 @@
 <?php
-$topdir = "../..";
-$topdir = "/home/jsquyres/www/ompi-unofficial";
-include_once("$topdir/doc/nav.inc");
-include_once("$topdir/includes/header.inc");
-
 // get errors to display
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
+
+$topdir = "../..";
+$topdir = "../../ompi-www";
+//$topdir = "/home/jsquyres/www/ompi-unofficial";
+include_once("$topdir/doc/nav.inc");
+include_once("$topdir/includes/header.inc");
 
 function error_out($error_string)
 {
@@ -15,6 +16,7 @@ function error_out($error_string)
     include("$topdir/includes/footer.inc");
     exit(0);
 }
+
 
 function emit_index_listing()
 {
@@ -42,17 +44,21 @@ function emit_index_listing()
 
 function emit_single_man_page($filename)
 {
-    print("I'm going to show you $filename");
-
+    printf("<a href=\"../man3\"><- Return to documentation listing</a>");
+    
     # 1. Validate the filename: Make sure it's just numbers, letters, characters.
-    if (preg_match("^[ 0-9a-zA-Z_.]*$", $filename) { # might not filter whole line, but instead look for specific substrings  
-        # 2. Validate that the file exists
-        if (file_exists($filename) {
+    if (preg_match("/MPI_[a-zA-Z_]+.md/", $filename)) { # might not filter whole line, but instead look for specific substrings  
+	# 2. Validate that the file exists
+        if (file_exists($filename)) {
             # 3. Open and read the file and close the file
             if ($fp = fopen($filename, "r")) {
                 $markdown_file = fread($fp, filesize($filename));
                 fclose($fp);
-                                  
+
+		# 3.5 verify there are no tabs in the file, replace all with "    "
+		$markdown_file = preg_replace("(\t)", "    ", $markdown_file); # find a better way - sometimes errors out (ex MPI_Comm_create_keyval.md)
+
+
                 # 4. Make a Parsedown object and render the markdown
                 include_once("Parsedown.php");
                 $Parsedown = new Parsedown();
@@ -77,8 +83,12 @@ function emit_single_man_page($filename)
     }
     # 1a. If bad, error_out(...)
     else {
-        printf("Bad request... Pls don't hack me");
+        printf("$filename is a bad request... Pls don't hack me<br>");
+	printf("<a href=\"../man3\">Go back</a>");
+	
     }
+
+    printf("<a href=\"../man3\"><- Return to documentation listing</a>");
 }
 
 // get the filename from the get request
