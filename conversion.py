@@ -1,4 +1,19 @@
-import os # os.system(command)
+'''
+Usage information:
+    The script should be placed in the same folder as the one containing the man pages. 
+        The first line after the imports specifies which folder contains the man pages,
+        the program will go through this folder and look for the file/files and convert
+        them into a markdown format.
+    
+    The two options to run the script are:
+        python3 nroff-to-md-conversion.py -f myfile.3in
+            converts a single file in the subdirectory from nroff to markdown
+
+        python3 nroff-to-md-conversion.py --all
+            converts every file in the subdirectory from nroff to markdown
+'''
+
+import os # os.system(command), os.chdir(folder)
 import argparse
 import re
 
@@ -9,6 +24,7 @@ newLinks = True
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-f', dest='file', type=str, help='.3in file to convert to markdown')
+parser.add_argument('--all', dest='convertAll', action="store_true", default=False, help='option to batch convert all files in subdirectory')
 args = parser.parse_args()
 
 # writes the lines list to the file
@@ -329,5 +345,8 @@ def convertAll():
         except:
             print("Couldn't convert", filename)
 
-# convert(args.file)
-convertAll()
+if (args.convertAll):
+    convertAll()
+else:
+    convert(args.file)
+  
