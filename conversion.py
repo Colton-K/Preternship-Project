@@ -244,9 +244,17 @@ def adjustMarkdown(filename):
           if workingLines[i][len(workingLines[i]) - 2] == '\\':
             # Format: [`MPI_Bcast`(3)](MPI_Bcast.html)
             # TODO: Make a regex find for 2 'MPI_' in the same line - if so, add 2 different lines
-            print('HERE: ',re.findall('MPI_'),line)
-            if len(re.findall('MPI_')) > 1:
-              print("split lines")
+
+            if len(re.findall('MPI_', line)) > 1:
+              # print('HERE: ',re.findall('(MPI_[a-zA-Z_]+)', line),line)
+              toAdd = re.findall('(MPI_[a-zA-Z_]+)', line)
+
+              for i in range(1, len(toAdd)):
+                newLines.append(addLink(toAdd[i]))
+              # print("split lines")
+
+              line = addLink(toAdd[0])
+
             else:
               line = addLink(workingLines[i])
 
